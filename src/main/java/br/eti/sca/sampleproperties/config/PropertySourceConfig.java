@@ -25,21 +25,19 @@ import org.springframework.core.env.PropertySource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.support.PropertiesLoaderUtils;
 
-/**
- * Tnis class is responsable for reload properties file
- */
+    /**
+    * Tnis class is responsable for reload properties file
+    */
     public final class PropertySourceConfig extends PropertySourcesPlaceholderConfigurer implements EnvironmentAware {
 
-        private static final Logger log = LoggerFactory.getLogger(PropertySourceConfig.class);
+    private static final Logger log = LoggerFactory.getLogger(PropertySourceConfig.class);
 
-        private static final String APP_CONFIG_NAME = "application.properties";
+    private static final String APP_CONFIG_NAME = "application-external.properties";
 
-        private static final String APP_CONFIG_PATH = Optional.ofNullable(System.getProperty("CONFIG_DIR"))
-                .orElseThrow(() -> new RuntimeException("CONFIG_DIR must be config."));
+    private static final String APP_CONFIG_PATH = Optional.ofNullable(System.getProperty("CONFIG_DIR"))
+        .orElseThrow(() -> new RuntimeException("CONFIG_DIR must be config."));
 
-        private FileSystemResource fileSystemResource;
-
-        private Environment environment;
+    private Environment environment;
 
     public PropertySourceConfig() {
 
@@ -51,16 +49,11 @@ import org.springframework.core.io.support.PropertiesLoaderUtils;
     @Override
     public void setEnvironment(Environment environment) {
         super.setEnvironment(environment);
+        
         // EVN
         this.environment = environment;
-        this.fileSystemResource = new FileSystemResource(new File(APP_CONFIG_PATH, APP_CONFIG_NAME));
 
-        Properties properties = new Properties();
-        try {
-            PropertiesLoaderUtils.fillProperties(properties, this.fileSystemResource);
-        } catch (IOException e) {
-            throw new RuntimeException("Fail load properties from resources");
-        }
+        this.prepareProperies();
     }
 
     /**
@@ -118,19 +111,27 @@ import org.springframework.core.io.support.PropertiesLoaderUtils;
             final MutablePropertySources propSources = configEnv.getPropertySources();
 
             Optional<PropertySource<?>> appConfig = StreamSupport.stream(propSources.spliterator(), false)
-                    .filter(ps -> ps.getName().matches("^.*applicationConfig.*file:.*$")).findFirst();
+                    .filter(ps -> ps.getName().matches("^.*applicationConfig.*")).findFirst();
+
+            if (! appConfig.isPresent()) {
+                propSources.addLast( new PropertiesPropertySource( "applicationConfig", this.getProperties()) );
+            }
 
             if (appConfig.isPresent()) {
-                String name = appConfig.get().getName();
-                Properties properties = new Properties();
-                try {
-                    PropertiesLoaderUtils.fillProperties(properties, fileSystemResource);
-                } catch (IOException e) {
-                    throw new RuntimeException("Fail load properties from resources");
-                }
-                propSources.replace(name, new PropertiesPropertySource(name, properties));
+                propSources.replace( "applicationConfig" , new PropertiesPropertySource( "applicationConfig", this.getProperties()));
             }
         }
+    }
+
+    private Properties getProperties() {
+        Properties properties = new Properties();
+        try {
+            FileSystemResource fsy = new FileSystemResource(new File(APP_CONFIG_PATH, APP_CONFIG_NAME));
+            PropertiesLoaderUtils.fillProperties(properties, fsy);
+        } catch (IOException e) {
+            throw new RuntimeException("Fail load properties from resources");
+        }
+        return properties;
     }
 
 }
