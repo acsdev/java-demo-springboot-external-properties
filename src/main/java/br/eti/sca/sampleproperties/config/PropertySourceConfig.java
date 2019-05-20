@@ -28,24 +28,22 @@ import org.springframework.core.io.support.PropertiesLoaderUtils;
 /**
  * Tnis class is responsable for reload properties file
  */
-public final class PropertySourceConfig extends PropertySourcesPlaceholderConfigurer implements EnvironmentAware {
+    public final class PropertySourceConfig extends PropertySourcesPlaceholderConfigurer implements EnvironmentAware {
 
-    private static final Logger log = LoggerFactory.getLogger(PropertySourceConfig.class);
+        private static final Logger log = LoggerFactory.getLogger(PropertySourceConfig.class);
 
-    private static final String APP_CONFIG_NAME = "application.properties";
+        private static final String APP_CONFIG_NAME = "application.properties";
 
-    private static final String APP_CONFIG_PATH = Optional.ofNullable(System.getProperty("CONFIG_DIR"))
-            .orElseThrow(() -> new RuntimeException("CONFIG_DIR must be config."));
+        private static final String APP_CONFIG_PATH = Optional.ofNullable(System.getProperty("CONFIG_DIR"))
+                .orElseThrow(() -> new RuntimeException("CONFIG_DIR must be config."));
 
-    private FileSystemResource fileSystemResource;
+        private FileSystemResource fileSystemResource;
 
-    private Environment environment;
+        private Environment environment;
 
     public PropertySourceConfig() {
 
         super();
-
-        prepareProperies();
 
         configureWatcher();
     }
@@ -132,7 +130,6 @@ public final class PropertySourceConfig extends PropertySourcesPlaceholderConfig
                 }
                 propSources.replace(name, new PropertiesPropertySource(name, properties));
             }
-
         }
     }
 
